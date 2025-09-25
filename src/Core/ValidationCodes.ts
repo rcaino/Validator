@@ -1,0 +1,20 @@
+export enum ValidationCodes {
+    'NOK' = 'NOK',
+    'OK' = 'OK',
+    // 'InvalidField',
+    // 'InvalidValidator',
+    'Required' = 'Required',
+    'minVal' = 'minVal',
+    'maxVal' = 'maxVal',
+    'isInRange' = 'isInRange',
+    'isBetween' = 'isBetween',
+    'maxLen' = 'maxLen',
+    'minLen' = 'minLen',
+    'len' = 'len',
+    'match' = 'match',
+    'isTrue' = 'isTrue',
+    'isFalse' = 'isFalse',
+    'maxCount' = 'maxCount',
+    'minCount' = 'minCount',
+    'count' = 'count'
+}

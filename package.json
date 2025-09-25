@@ -1,0 +1,21 @@
+{
+  "name": "ts-validator",
+  "version": "1.0.0",
+  "description": "An useful library to add entity validation on TS",
+  "main": "./index.ts",
+  "type": "module",
+  "scripts": {
+    "test": "test",
+    "start": "ts-node src/index.ts"
+  },
+  "keywords": [
+    "Class",
+    "Validation"
+  ],
+  "author": "Raul Caino",
+  "license": "MIT",
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.2"
+  }
+}
