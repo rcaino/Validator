@@ -25,10 +25,10 @@ export default class Validations {
 
     static isNotEmpty = this.required;
 
-    static minVal = <T = number | Date>(minValue: T) => (fieldValue: T) => fieldValue >= minValue ? ValidationCodes.OK : ValidationCodes.minVal;
-    static maxVal = <T = number | Date>(maxValue: T) => (fieldValue: T) => fieldValue <= maxValue ? ValidationCodes.OK : ValidationCodes.maxVal;
-    static isInRange = <T = number | Date>(minValue: T, maxValue: T) => (fieldValue: T) => fieldValue <= maxValue && fieldValue >= minValue ? ValidationCodes.OK : ValidationCodes.isInRange;
-    static isBetween = <T = number | Date>(minValue: T, maxValue: T) => (fieldValue: T) => fieldValue < maxValue && fieldValue > minValue ? ValidationCodes.OK : ValidationCodes.isBetween;
+    static minVal = (minValue: number | Date) => (fieldValue: number | Date) => fieldValue >= minValue ? ValidationCodes.OK : ValidationCodes.minVal;
+    static maxVal = (maxValue: number | Date) => (fieldValue: number | Date) => fieldValue <= maxValue ? ValidationCodes.OK : ValidationCodes.maxVal;
+    static isInRange = (minValue: number | Date, maxValue: number | Date) => (fieldValue: number | Date) => fieldValue <= maxValue && fieldValue >= minValue ? ValidationCodes.OK : ValidationCodes.isInRange;
+    static isBetween = (minValue: number | Date, maxValue: number | Date) => (fieldValue: number | Date) => fieldValue < maxValue && fieldValue > minValue ? ValidationCodes.OK : ValidationCodes.isBetween;
     static maxLen = (maxLen: number) => (fieldValue: string) => fieldValue?.length <= maxLen ? ValidationCodes.OK : ValidationCodes.maxLen;
     static minLen = (minLen: number) => (fieldValue: string) => fieldValue?.length >= minLen ? ValidationCodes.OK : ValidationCodes.minLen;
     static len = (Len: number) => (fieldValue: string) => fieldValue?.length == Len ? ValidationCodes.OK : ValidationCodes.len;
