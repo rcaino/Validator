@@ -1,63 +1,100 @@
-import { ValidationCodes } from "./ValidationCodes";
+import { ValidationCode, CoreValidationCodes } from "./ValidationCode";
+export type ValidationCodes = ValidationCode; // Para compatibilidad con código existente
 
 export default class Validations {
-
-    static required(value: string): ValidationCodes;
-    static required(value: number): ValidationCodes;
-    static required(value: boolean): ValidationCodes;
-    static required(value: Date): ValidationCodes;
-    static required(value?: string | number | boolean | Date): ValidationCodes
-    static required<T>(value: T): ValidationCodes {
-
-        if (
-            (value === null || value === undefined) ||
-
-            (value instanceof Date && value === new Date()) ||
-
-            (value instanceof String && value === '') ||
-
-            (value instanceof Object && (Object.keys(value).length == 0))
-        )
-            return ValidationCodes.Required;
-
-        return ValidationCodes.OK;
+    /**
+     * Valida que un valor primitivo (string, number, boolean, Date) no sea null ni undefined
+     * Útil para validaciones compuestas donde necesitamos verificar que un campo tenga valor
+     * antes de aplicar otras reglas
+     */
+    static hasValue(value: string): ValidationCode;
+    static hasValue(value: number): ValidationCode;
+    static hasValue(value: boolean): ValidationCode;
+    static hasValue(value: Date): ValidationCode;
+    static hasValue(value: any): ValidationCode {
+        if (value === null || value === undefined || 
+            (typeof value === 'string' && value === '') ||
+            (value instanceof Date && value.toString() === new Date().toString())) {
+            return CoreValidationCodes.HAS_VALUE;
+        }
+        return CoreValidationCodes.OK;
     }
 
-    static isNotEmpty = this.required;
+    /**
+     * Valida que una colección (array u objeto) no esté vacía
+     * Útil para validaciones compuestas donde necesitamos verificar que una colección tenga elementos
+     * antes de aplicar otras reglas
+     */
+    static isNotEmpty(value: Array<any>): ValidationCode;
+    static isNotEmpty(value: object): ValidationCode;
+    static isNotEmpty(value: any): ValidationCode {
+        if (value === null || value === undefined ||
+            (Array.isArray(value) && value.length === 0) ||
+            (typeof value === 'object' && Object.keys(value).length === 0)) {
+            return CoreValidationCodes.HAS_VALUE;
+        }
+        return CoreValidationCodes.OK;
+    }
 
-    static minVal = (minValue: number | Date) => (fieldValue: number | Date) => fieldValue >= minValue ? ValidationCodes.OK : ValidationCodes.minVal;
-    static maxVal = (maxValue: number | Date) => (fieldValue: number | Date) => fieldValue <= maxValue ? ValidationCodes.OK : ValidationCodes.maxVal;
-    static isInRange = (minValue: number | Date, maxValue: number | Date) => (fieldValue: number | Date) => fieldValue <= maxValue && fieldValue >= minValue ? ValidationCodes.OK : ValidationCodes.isInRange;
-    static isBetween = (minValue: number | Date, maxValue: number | Date) => (fieldValue: number | Date) => fieldValue < maxValue && fieldValue > minValue ? ValidationCodes.OK : ValidationCodes.isBetween;
-    static maxLen = (maxLen: number) => (fieldValue: string) => fieldValue?.length <= maxLen ? ValidationCodes.OK : ValidationCodes.maxLen;
-    static minLen = (minLen: number) => (fieldValue: string) => fieldValue?.length >= minLen ? ValidationCodes.OK : ValidationCodes.minLen;
-    static len = (Len: number) => (fieldValue: string) => fieldValue?.length == Len ? ValidationCodes.OK : ValidationCodes.len;
-    static match = (regEx: RegExp) => (fieldValue: string) => regEx.test(fieldValue) ? ValidationCodes.OK : ValidationCodes.match;
-    static isTrue = (fieldValue: boolean) => fieldValue === true ? ValidationCodes.OK : ValidationCodes.isTrue;
-    static isFalse = (fieldValue: boolean) => fieldValue === false ? ValidationCodes.OK : ValidationCodes.isFalse;
-    static and = <T>(...rules: ((fieldValue: T) => ValidationCodes)[]) => (fieldValue: T) => {
+    static minVal = (minValue: number | Date) => (fieldValue: number | Date | null | undefined) =>
+        fieldValue !== null && fieldValue !== undefined && fieldValue >= minValue ? CoreValidationCodes.OK : CoreValidationCodes.MIN_VAL;
+
+    static maxVal = (maxValue: number | Date) => (fieldValue: number | Date | null | undefined) =>
+        fieldValue !== null && fieldValue !== undefined && fieldValue <= maxValue ? CoreValidationCodes.OK : CoreValidationCodes.MAX_VAL;
+
+    static isInRange = (minValue: number | Date, maxValue: number | Date) => (fieldValue: number | Date | null | undefined) =>
+        fieldValue !== null && fieldValue !== undefined && fieldValue <= maxValue && fieldValue >= minValue ? CoreValidationCodes.OK : CoreValidationCodes.IS_IN_RANGE;
+
+    static isBetween = (minValue: number | Date, maxValue: number | Date) => (fieldValue: number | Date | null | undefined) =>
+        fieldValue !== null && fieldValue !== undefined && fieldValue < maxValue && fieldValue > minValue ? CoreValidationCodes.OK : CoreValidationCodes.IS_BETWEEN;
+
+    static maxLen = (maxLen: number) => (fieldValue: string | null | undefined) =>
+        fieldValue !== null && fieldValue !== undefined && fieldValue.length <= maxLen ? CoreValidationCodes.OK : CoreValidationCodes.MAX_LEN;
+
+    static minLen = (minLen: number) => (fieldValue: string | null | undefined) =>
+        fieldValue !== null && fieldValue !== undefined && fieldValue.length >= minLen ? CoreValidationCodes.OK : CoreValidationCodes.MIN_LEN;
+
+    static len = (Len: number) => (fieldValue: string | null | undefined) =>
+        fieldValue !== null && fieldValue !== undefined && fieldValue.length == Len ? CoreValidationCodes.OK : CoreValidationCodes.LEN;
+
+    static match = (regEx: RegExp) => (fieldValue: string | null | undefined) =>
+        fieldValue !== null && fieldValue !== undefined && regEx.test(fieldValue) ? CoreValidationCodes.OK : CoreValidationCodes.MATCH;
+
+    static isTrue = (fieldValue: boolean | null | undefined) =>
+        fieldValue === true ? CoreValidationCodes.OK : CoreValidationCodes.IS_TRUE;
+
+    static isFalse = (fieldValue: boolean | null | undefined) =>
+        fieldValue === false ? CoreValidationCodes.OK : CoreValidationCodes.IS_FALSE;
+
+    static and = <T>(...rules: ((fieldValue: T) => ValidationCode)[]) => (fieldValue: T) => {
         for (const rule of rules) {
             const result = rule(fieldValue);
-            if (result !== ValidationCodes.OK) {
+            if (!result.equals(CoreValidationCodes.OK)) {
                 return result;
             }
         }
-        return ValidationCodes.OK;
+        return CoreValidationCodes.OK;
     }
-    static or = <T>(...rules: ((fieldValue: T) => ValidationCodes)[]) => (fieldValue: T) => {
-        let result = ValidationCodes.OK;
+
+    static or = <T>(...rules: ((fieldValue: T) => ValidationCode)[]) => (fieldValue: T) => {
+        let result = CoreValidationCodes.OK;
         for (const rule of rules) {
             const ruleResult = rule(fieldValue);
-            if (ruleResult === ValidationCodes.OK) {
-                return ValidationCodes.OK;
-            } else if (result === ValidationCodes.OK) {
+            if (ruleResult.equals(CoreValidationCodes.OK)) {
+                return CoreValidationCodes.OK;
+            } else if (result.equals(CoreValidationCodes.OK)) {
                 result = ruleResult;
             }
         }
-        return ValidationCodes.OK;
+        return result;
     }
 
-    static maxCount = (maxLen: number) => <T>(list: Array<T>) => list?.length <= maxLen ? ValidationCodes.OK : ValidationCodes.maxCount;
-    static minCount = (minLen: number) => <T>(list: Array<T>) => list?.length >= minLen ? ValidationCodes.OK : ValidationCodes.minCount;
-    static count = (count: number) => <T>(list: Array<T>) => list?.length == count ? ValidationCodes.OK : ValidationCodes.count;
+    static maxCount = (maxLen: number) => <T>(list: Array<T>) => 
+        list.length <= maxLen ? CoreValidationCodes.OK : CoreValidationCodes.MAX_COUNT;
+
+    static minCount = (minLen: number) => <T>(list: Array<T>) => 
+        list.length >= minLen ? CoreValidationCodes.OK : CoreValidationCodes.MIN_COUNT;
+
+    static count = (count: number) => <T>(list: Array<T>) => 
+        list.length == count ? CoreValidationCodes.OK : CoreValidationCodes.COUNT;
 }

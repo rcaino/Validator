@@ -1,6 +1,6 @@
 import { Validations, Verifiable } from '../src/Core';
 
-const { required, minVal, isBetween, minLen } = Validations;
+const { hasValue, minVal, isBetween, minLen } = Validations;
 
 class User {
     constructor(name: string, age: number, email: string, salary: number, isActive: boolean) {
@@ -20,12 +20,12 @@ class User {
 class UserVerifiable extends Verifiable<User> {
     constructor(user: User, readonly = false) {
         super(user, readonly);
-        this.addValidation("name", required)
-        this.addValidations("age", [required, isBetween(12, 15)])
-        this.addValidations("email", [required, minLen(6), Validations["match"](/.+@.+\..+/)]);
-        this.addValidations("salary", [required, minVal(10000)]);
+        this.addValidation("name", hasValue)
+        this.addValidations("age", [hasValue, isBetween(12, 15)])
+        this.addValidations("email", [hasValue, minLen(6), Validations["match"](/.+@.+\..+/)]);
+        this.addValidations("salary", [hasValue, minVal(10000)]);
         this.addValidations("isActive", [
-            required,
+            hasValue,
             (value: User["isActive"]) => Validations.isTrue(value)
         ]);
     }

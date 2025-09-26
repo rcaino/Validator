@@ -1,33 +1,59 @@
-import { ValidationCodes } from "./ValidationCodes";
+import { ValidationCode } from "./ValidationCode";
+import { ValidationRule, ValidationResult, ValidationErrors } from "./types";
+import { ValidationEngine } from "./ValidationEngine";
 
-export type Validator<T> = (value: T) => ValidationCodes;
-export type ValidationErrors<T, P extends keyof T> = { id: T[P] | number, errors: Array<ValidationCodes> };
+export default class Verifiable<T extends object> {
+    private model: T;
+    private readonly engine: ValidationEngine<T>;
 
-export default class Verifiable<T extends Object> {
     constructor(model: T = {} as T, readonly = true) {
         this.model = model;
+        this.engine = new ValidationEngine<T>();
         this.get = <K extends keyof T>(field: K) => this.model?.[field];
-        this.set = <K extends keyof T>(field: K, value: T[K]) => {
-            if (!readonly && this.model?.hasOwnProperty(field)) this.model[field] = value;
+        this.set = <K extends keyof T>(field: K, value: T[K] | null | undefined) => {
+            if (!readonly && this.model?.hasOwnProperty(field)) this.model[field] = value as T[K];
             return this;
         }
     }
-    public get: <K extends keyof T>(field: K) => T[K];
-    public set: <K extends keyof T>(field: K, value: T[K]) => Verifiable<T>;
 
-    private model: T;
-    private validations: Array<{ field: keyof T, evaluator: Validator<T> }> = [];
-    protected addValidation = <F extends keyof T>(field: F, validator: Validator<T[F]>) => this.validations.push({ field, evaluator: this.validate(field, validator) });
-    protected addValidations = <F extends keyof T>(field: F, validators: Validator<T[F]>[]) => { this.validations = [...this.validations, ...validators.map(validator => ({ field, evaluator: this.validate(field, validator) }))] };
+    public get: <K extends keyof T>(field: K) => T[K] | undefined;
+    public set: <K extends keyof T>(field: K, value: T[K] | null | undefined) => Verifiable<T>;
 
-    private validate = <F extends keyof T>(field: F, validator: Validator<T[F]>) => (model: T) => validator(model[field]);
+    protected addValidation = <F extends keyof T>(
+        field: F, 
+        validator: (value: T[F]) => ValidationCode,
+        isRequired: boolean = false
+    ) => {
+        const rule: ValidationRule<T, F> = {
+            field,
+            evaluator: (model: T) => validator(model[field]),
+            isRequired
+        };
+        this.engine.addRule(rule);
+    }
+
+    protected addValidations = <F extends keyof T>(
+        field: F, 
+        validators: ((value: T[F]) => ValidationCode)[],
+        isRequired: boolean = false
+    ) => {
+        const rules = validators.map(validator => ({
+            field,
+            evaluator: (model: T) => validator(model[field]),
+            isRequired
+        }));
+        this.engine.addRules(rules);
+    }
 
     public isValid = (field?: keyof T) => {
-        let review = field ? this.validations.filter(validator => validator.field === field) : this.validations;
-        return review.every((validator) => validator.evaluator(this.model) === ValidationCodes.OK);
+        return this.engine.isValid(this.model, field);
     }
 
     public areValid = (fields: (keyof T)[]) => {
-        return fields.every(field => this.isValid(field));
+        return this.engine.areValid(this.model, fields);
+    }
+
+    public verify = (fields?: keyof T | (keyof T)[]): ValidationResult<T> => {
+        return this.engine.validate(this.model, fields);
     }
 }

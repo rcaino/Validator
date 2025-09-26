@@ -1,14 +1,32 @@
 {
   "compilerOptions": {
+    // Configuración de Módulos y ECMAScript
     "target": "es2020",
     "module": "ESNext",
     "moduleResolution": "node",
+    "lib": ["es2020"],
+    
+    // Configuración de Output
+    "outDir": "./dist",
+    "rootDir": "./src",
+    
+    // Generación de Declarations
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "outDir": "./dist",
-    "rootDir": "./src",
+    
+    // Verificaciones Estrictas
     "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictPropertyInitialization": true,
+    
+    // Optimizaciones
+    "removeComments": true,
+    "importHelpers": true,
+    
+    // Compatibilidad
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true

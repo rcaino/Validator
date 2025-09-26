@@ -21,7 +21,12 @@
     "Validation",
     "TypeScript",
     "Entity",
-    "Validator"
+    "Validator",
+    "Extensible",
+    "SOLID",
+    "Custom-Validation",
+    "Namespaced",
+    "Type-Safe"
   ],
   "author": "Raul Caino",
   "license": "MIT",
